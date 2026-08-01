@@ -282,19 +282,16 @@
         </div>
 
         <div class="footer-row" style="margin-top:14px;">
-            <div class="admin-link">
-                <a href="/admin">⚙️ Admin Panel</a>
-            </div>
-            <div class="voice-indicator">
-                <div class="voice-wave">
-                    <span></span><span></span><span></span><span></span><span></span>
-                </div>
-                Ovozli tanish yoqilgan
-            </div>
+            <button class="btn btn-primary" onclick="window.location='/admin'" style="background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 10px 16px;">
+                ⚙️ Admin Panel
+            </button>
+            <button class="btn btn-danger" onclick="logout()" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 10px 16px;">
+                🚪 Chiqish
+            </button>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}?v=16"></script>
+    <script src="{{ url_for('static', filename='script.js') }}?v=17"></script>
     <script>
         // Kamera yoqilganda placeholder-ni yashirish
         document.getElementById('startButton').addEventListener('click', () => {
@@ -303,6 +300,13 @@
         document.getElementById('stopButton').addEventListener('click', () => {
             document.getElementById('noCamPlaceholder').style.display = 'flex';
         });
+
+        async function logout() {
+            if(confirm("Tizimdan chiqishni xohlaysizmi?")) {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.reload();
+            }
+        }
     </script>
 </body>
 </html>

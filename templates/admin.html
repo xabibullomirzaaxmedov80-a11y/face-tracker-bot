@@ -361,24 +361,8 @@
 <!-- Particles -->
 <div class="particles" id="particles"></div>
 
-<!-- ════════ LOGIN ════════ -->
-<div id="loginScreen">
-    <div class="login-box">
-        <div class="login-icon">🛡️</div>
-        <h1>FaceGuard</h1>
-        <p>Admin paneliga kirish uchun parolni kiriting</p>
-        <div class="input-group">
-            <input type="password" id="adminPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter') adminLogin()">
-        </div>
-        <p id="loginError">❌ Noto'g'ri parol. Qayta urinib ko'ring.</p>
-        <button class="btn btn-primary" id="loginBtn" onclick="adminLogin()" style="width:100%; justify-content:center; padding:14px;">
-            Kirish
-        </button>
-    </div>
-</div>
-
-<!-- ════════ DASHBOARD ════════ -->
-<div id="dashboardScreen">
+    <!-- ════════ DASHBOARD ════════ -->
+    <div id="dashboardScreen" style="display: block;">
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="logo">
@@ -600,7 +584,23 @@
         `;
         container.appendChild(p);
     }
-})();
+}
+
+window.onload = () => {
+    loadFaces();
+    initParticles();
+    const dz = document.getElementById('dropZone');
+    dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', (e) => { e.preventDefault(); dz.classList.remove('dragover'); });
+    dz.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dz.classList.remove('dragover');
+        if(e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            document.getElementById('dropZoneInput').files = e.dataTransfer.files;
+            handleFileSelect({target: document.getElementById('dropZoneInput')});
+        }
+    });
+};
 
 // ════════ LOGIN ════════
 async function adminLogin() {
@@ -633,10 +633,10 @@ async function adminLogin() {
 }
 
 async function adminLogout() {
-    await fetch('/api/admin/logout', {method:'POST'});
-    document.getElementById('dashboardScreen').style.display = 'none';
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('adminPassword').value = '';
+    if(confirm("Tizimdan chiqishni xohlaysizmi?")) {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/login';
+    }
 }
 
 // ════════ NAVIGATION ════════
@@ -652,61 +652,64 @@ function showPage(pageId, navEl) {
 
 // ════════ FACES ════════
 async function loadFaces() {
-    const grid = document.getElementById('facesGrid');
     try {
         const res = await fetch('/api/admin/faces');
-        if (!res.ok) return;
         const data = await res.json();
-        const faces = data.faces || [];
-
-        // Update stats
-        document.getElementById('statTotal').textContent = faces.length;
-        document.getElementById('statTrained').textContent = faces.length > 0 ? '✅ Tayyor' : '⚠️ Bo\'sh';
-        document.getElementById('faceCountBadge').textContent = faces.length + ' ta yuz';
-        document.getElementById('statLastTrain').textContent = new Date().toLocaleTimeString('uz-UZ');
-
-        if (faces.length === 0) {
-            grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
-                <div class="e-icon">👤</div>
-                <p>Bazada hech qanday yuz yo'q.<br>Yangi shaxs qo'shing!</p>
-            </div>`;
+        if (data.error) {
+            if (data.error === "Unauthorized") window.location.href = '/login';
             return;
         }
-
-        grid.innerHTML = faces.map((f, i) => `
-            <div class="face-card" id="card-${f.filename.replace(/\./g,'_')}">
-                <div class="face-badge">✓ Faol</div>
-                <img src="${f.url}" alt="${f.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'160\\' height=\\'160\\'><rect fill=\\'%231a1a26\\'/><text x=\\'50%\\' y=\\'50%\\' font-size=\\'40\\' text-anchor=\\'middle\\' dominant-baseline=\\'middle\\'>👤</text></svg>'">
-                <div class="face-card-info">
-                    <div class="face-card-name">${f.name}</div>
-                    <div class="face-card-meta">${f.filename}</div>
-                    <div class="face-card-actions">
-                        <button class="btn btn-danger btn-sm" onclick="deleteFace('${f.filename}')">🗑️</button>
+        
+        const grid = document.getElementById('facesGrid');
+        const cnt  = document.getElementById('totalFacesCount');
+        const cnt2 = document.getElementById('totalFacesCard');
+        
+        cnt.textContent = data.faces.length;
+        cnt2.textContent = data.faces.length;
+        
+        grid.innerHTML = '';
+        if(data.faces.length === 0) {
+            grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="e-icon">👤</div><p>Bazada hech qanday yuz yo\'q.<br>Yangi shaxs qo\'shing!</p></div>';
+            return;
+        }
+        
+        data.faces.forEach((f, i) => {
+            const card = document.createElement('div');
+            card.className = 'face-card';
+            card.style.animationDelay = (i * 0.05) + 's';
+            card.innerHTML = `
+                <div class="face-img-wrap">
+                    <img src="${f.image_b64}" class="face-img" alt="${f.name}">
+                    <div class="face-overlay">
+                        <button class="btn btn-danger btn-sm" onclick="deleteFace('${f.id}')">
+                            🗑 O'chirish
+                        </button>
                     </div>
                 </div>
-            </div>
-        `).join('');
-    } catch(e) {
-        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><p>❌ Yuklashda xatolik</p></div>`;
+                <div class="face-info">
+                    <div class="face-name">${f.name}</div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    } catch (e) {
+        console.error(e);
     }
 }
 
-async function deleteFace(filename) {
-    if (!confirm(`"${filename}" ni o'chirishni xohlaysizmi?`)) return;
-    const card = document.getElementById('card-' + filename.replace(/\./g,'_'));
-    if (card) { card.style.opacity = '0.4'; card.style.pointerEvents = 'none'; }
+async function deleteFace(id) {
+    if(!confirm("Haqiqatan ham o'chirmoqchimisiz?")) return;
     try {
-        const res = await fetch(`/api/admin/faces/${filename}`, {method:'DELETE'});
+        const res = await fetch('/api/admin/faces/' + id, { method: 'DELETE' });
         const data = await res.json();
         if (data.success) {
-            showToast('Muvaffaqiyatli o\'chirildi ✓', 'success');
+            showToast("Yuz o'chirildi", "success");
             loadFaces();
         } else {
-            showToast('O\'chirishda xatolik', 'error');
-            if (card) { card.style.opacity = '1'; card.style.pointerEvents = 'auto'; }
+            showToast(data.error || "Xatolik", "error");
         }
-    } catch(e) {
-        showToast('Server xatosi', 'error');
+    } catch (e) {
+        showToast("Xatolik", "error");
     }
 }
 
@@ -721,24 +724,6 @@ let selectedFile = null;
 function handleFileSelect(e) {
     const file = e.target.files[0];
     if (file) setPreview(file);
-}
-function handleDragOver(e) {
-    e.preventDefault();
-    document.getElementById('dropZone').classList.add('dragover');
-}
-function handleDragLeave(e) {
-    document.getElementById('dropZone').classList.remove('dragover');
-}
-function handleDrop(e) {
-    e.preventDefault();
-    document.getElementById('dropZone').classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) setPreview(file);
-}
-function handleDropZoneClick(e) {
-    const video = document.getElementById('adminVideo');
-    if (video && video.style.display === 'block') return;
-    document.getElementById('dropZoneInput').click();
 }
 
 function setPreview(file) {

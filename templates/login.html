@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tizimga Kirish - FaceGuard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body {
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 20px;
+        }
+        .auth-card {
+            background: rgba(20, 20, 28, 0.7);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%; max-width: 420px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+            text-align: center;
+        }
+        .logo-icon {
+            font-size: 3rem; margin-bottom: 10px;
+        }
+        h1 { margin-bottom: 8px; }
+        .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 30px; }
+        
+        .input-group { margin-bottom: 16px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: var(--muted); }
+        .input-group input {
+            width: 100%; padding: 14px 16px;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; color: white; font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+        }
+        .input-group input:focus {
+            outline: none; border-color: var(--accent);
+            background: rgba(124, 58, 237, 0.05);
+        }
+        
+        .btn { width: 100%; justify-content: center; padding: 14px; margin-top: 10px; }
+        
+        .toggle-text {
+            margin-top: 24px; font-size: 0.9rem; color: var(--muted);
+        }
+        .toggle-text span {
+            color: var(--accent); cursor: pointer; font-weight: 600;
+        }
+        .toggle-text span:hover { text-decoration: underline; }
+        
+        #errorMsg {
+            color: #ef4444; font-size: 0.85rem; margin-bottom: 16px;
+            display: none; background: rgba(239, 68, 68, 0.1);
+            padding: 10px; border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+
+    <div class="auth-card">
+        <div class="logo-icon">🛡️</div>
+        <h1>FaceGuard</h1>
+        <p class="subtitle" id="formSubtitle">Tizimga kirish uchun ma'lumotlarni kiriting</p>
+        
+        <div id="errorMsg"></div>
+
+        <div class="input-group">
+            <label>Login (Username)</label>
+            <input type="text" id="username" placeholder="Masalan: admin">
+        </div>
+        <div class="input-group">
+            <label>Parol</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+
+        <button class="btn btn-primary" id="actionBtn" onclick="submitAuth()">Kirish</button>
+        
+        <div class="toggle-text" id="toggleText">
+            Akkauntingiz yo'qmi? <span onclick="toggleMode()">Ro'yxatdan o'tish</span>
+        </div>
+    </div>
+
+    <script>
+        let isLogin = true;
+        
+        function toggleMode() {
+            isLogin = !isLogin;
+            document.getElementById('formSubtitle').innerText = isLogin ? "Tizimga kirish uchun ma'lumotlarni kiriting" : "Yangi akkaunt yaratish";
+            document.getElementById('actionBtn').innerText = isLogin ? "Kirish" : "Ro'yxatdan o'tish";
+            document.getElementById('toggleText').innerHTML = isLogin 
+                ? 'Akkauntingiz yo\'qmi? <span onclick="toggleMode()">Ro\'yxatdan o\'tish</span>'
+                : 'Akkauntingiz bormi? <span onclick="toggleMode()">Kirish</span>';
+            document.getElementById('errorMsg').style.display = 'none';
+        }
+
+        async function submitAuth() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const err = document.getElementById('errorMsg');
+            const btn = document.getElementById('actionBtn');
+            
+            if (!u || !p) {
+                err.innerText = "Hamma maydonlarni to'ldiring!";
+                err.style.display = 'block';
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.innerText = "Kuting...";
+            
+            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+            
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: u, password: p})
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    window.location.href = '/';
+                } else {
+                    err.innerText = data.error || "Xatolik yuz berdi";
+                    err.style.display = 'block';
+                }
+            } catch (e) {
+                err.innerText = "Internetda muammo bor";
+                err.style.display = 'block';
+            }
+            
+            btn.disabled = false;
+            btn.innerText = isLogin ? "Kirish" : "Ro'yxatdan o'tish";
+        }
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submitAuth();
+        });
+    </script>
+</body>
+</html>
