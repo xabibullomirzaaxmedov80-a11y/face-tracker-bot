@@ -211,6 +211,23 @@
             display: flex; align-items: center; justify-content: space-between;
             flex-wrap: wrap; gap: 8px;
         }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            body { padding: 8px; }
+            .card { padding: 16px; border-radius: 16px; width: 100%; max-width: 100%; }
+            .header { margin-bottom: 16px; }
+            h1 { font-size: 1.5rem; }
+            .subtitle { font-size: 0.8rem; }
+            .controls { flex-direction: column; gap: 8px; }
+            .btn { padding: 12px; }
+            .status-bar { font-size: 0.75rem; padding: 4px 10px; }
+            .footer-row { flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+            .blob1 { width: 250px; height: 250px; }
+            .blob2 { width: 200px; height: 200px; }
+            #cameraPersonName { font-size: 0.9rem; }
+            .result-pill { min-width: 150px; padding: 8px 16px; }
+        }
     </style>
 </head>
 <body>

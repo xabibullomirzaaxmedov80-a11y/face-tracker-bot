@@ -337,11 +337,22 @@
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
-            .sidebar { width: 60px; padding: 20px 10px; }
-            .logo-text, .nav-item span, .nav-label, .sidebar-footer .logout-btn span { display: none; }
-            .main { margin-left: 60px; padding: 20px; }
+            .sidebar { width: 60px; padding: 20px 0; }
+            .logo { justify-content: center; padding: 0; }
+            .nav-item { justify-content: center; padding: 12px 0; }
+            .logout-btn { justify-content: center; padding: 12px 0; }
+            .logo-text, .nav-item span:not(.icon), .nav-label, .sidebar-footer .logout-btn span:not(.icon) { display: none; }
+            .main { margin-left: 60px; padding: 16px; }
             .stats-row { grid-template-columns: 1fr; }
             .form-row { flex-direction: column; }
+        }
+        @media (max-width: 480px) {
+            .topbar { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+            .topbar h2 { font-size: 1.3rem; }
+            .stat-card { padding: 16px; }
+            .section-card { padding: 16px; }
+            .drop-zone { padding: 20px 10px; }
+            .login-box { padding: 30px 20px; }
         }
     </style>
 </head>
