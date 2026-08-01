@@ -1,0 +1,32 @@
+/* admin.css - Yangi admin panel uchun yordamchi stilllar */
+/* Asosiy stilllar admin.html ichida inline yozilgan */
+
+/* Qo'shimcha animatsiyalar */
+.face-card {
+    animation: cardIn 0.4s ease both;
+}
+
+@keyframes cardIn {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.face-card:nth-child(1) { animation-delay: 0.05s; }
+.face-card:nth-child(2) { animation-delay: 0.10s; }
+.face-card:nth-child(3) { animation-delay: 0.15s; }
+.face-card:nth-child(4) { animation-delay: 0.20s; }
+.face-card:nth-child(5) { animation-delay: 0.25s; }
+.face-card:nth-child(6) { animation-delay: 0.30s; }
+
+/* Drag-and-drop uchun */
+.drop-zone.dragover {
+    border-color: #7c3aed !important;
+    background: rgba(124, 58, 237, 0.1) !important;
+    transform: scale(1.02);
+}

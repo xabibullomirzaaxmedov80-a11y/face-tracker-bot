@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel — FaceGuard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #13131a;
+            --card: #1a1a26;
+            --border: rgba(255,255,255,0.07);
+            --accent: #7c3aed;
+            --accent2: #4f46e5;
+            --green: #10b981;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --glow: rgba(124,58,237,0.25);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── PARTICLES ── */
+        .particles {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            overflow: hidden;
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: float linear infinite;
+            opacity: 0.15;
+        }
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.15; }
+            90% { opacity: 0.15; }
+            100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* ── LOGIN ── */
+        #loginScreen {
+            position: fixed; inset: 0; display: flex;
+            align-items: center; justify-content: center; z-index: 100;
+            background: radial-gradient(ellipse at center, rgba(124,58,237,0.12) 0%, var(--bg) 70%);
+        }
+        .login-box {
+            background: var(--card);
+            border: 1px solid rgba(124,58,237,0.3);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 0 60px rgba(124,58,237,0.15), 0 20px 60px rgba(0,0,0,0.5);
+            animation: slideUp 0.5s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-icon {
+            width: 70px; height: 70px; border-radius: 20px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; margin: 0 auto 24px;
+            box-shadow: 0 0 30px var(--glow);
+        }
+        .login-box h1 { text-align: center; font-size: 1.8rem; font-weight: 700; margin-bottom: 6px; }
+        .login-box p { text-align: center; color: var(--muted); margin-bottom: 32px; font-size: 0.9rem; }
+        .input-group { position: relative; margin-bottom: 16px; }
+        .input-group input {
+            width: 100%; padding: 14px 18px; font-family: 'Outfit', sans-serif;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+            border-radius: 12px; color: var(--text); font-size: 1rem;
+            transition: all 0.25s;
+        }
+        .input-group input:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
+            background: rgba(124,58,237,0.06);
+        }
+        #loginError {
+            color: var(--red); font-size: 0.85rem; margin-top: -8px;
+            margin-bottom: 12px; display: none; text-align: center;
+            animation: shake 0.3s ease;
+        }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        /* ── LAYOUT ── */
+        #dashboardScreen { display: none; }
+        .sidebar {
+            position: fixed; left: 0; top: 0; bottom: 0;
+            width: 260px; background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            padding: 28px 20px; z-index: 50;
+        }
+        .logo {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 40px; padding: 0 8px;
+        }
+        .logo-icon {
+            width: 40px; height: 40px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        .logo-text { font-weight: 700; font-size: 1.2rem; }
+        .logo-text span { color: var(--accent); }
+        .nav-label {
+            font-size: 0.7rem; font-weight: 600; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 0.1em;
+            padding: 0 12px; margin-bottom: 8px;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 14px; border-radius: 10px; cursor: pointer;
+            color: var(--muted); font-weight: 500; font-size: 0.95rem;
+            transition: all 0.2s; margin-bottom: 4px;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+        .nav-item.active { background: rgba(124,58,237,0.15); color: var(--accent); }
+        .nav-item .icon { font-size: 1.1rem; width: 22px; text-align: center; }
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid var(--border); padding-top: 20px;
+        }
+        .logout-btn {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 14px; border-radius: 10px; cursor: pointer;
+            color: var(--red); font-weight: 500; font-size: 0.95rem;
+            transition: all 0.2s; border: none; background: none;
+            width: 100%; font-family: 'Outfit', sans-serif;
+        }
+        .logout-btn:hover { background: rgba(239,68,68,0.1); }
+
+        .main { margin-left: 260px; padding: 32px; min-height: 100vh; }
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 32px;
+        }
+        .topbar h2 { font-size: 1.6rem; font-weight: 700; }
+        .topbar p { color: var(--muted); font-size: 0.9rem; margin-top: 2px; }
+        .badge {
+            background: rgba(124,58,237,0.2); color: var(--accent);
+            border: 1px solid rgba(124,58,237,0.3);
+            padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+        }
+
+        /* ── STATS ── */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+        .stat-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 20px 22px;
+            display: flex; align-items: center; gap: 16px;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-icon {
+            width: 48px; height: 48px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; flex-shrink: 0;
+        }
+        .stat-icon.purple { background: rgba(124,58,237,0.2); }
+        .stat-icon.green  { background: rgba(16,185,129,0.2); }
+        .stat-icon.yellow { background: rgba(245,158,11,0.2); }
+        .stat-num { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+        .stat-lbl { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+
+        /* ── PAGES ── */
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── CARDS ── */
+        .section-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 18px; padding: 24px; margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 1rem; font-weight: 600; margin-bottom: 18px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* ── UPLOAD AREA ── */
+        .drop-zone {
+            border: 2px dashed rgba(124,58,237,0.3);
+            border-radius: 14px; padding: 40px 20px;
+            text-align: center; cursor: pointer;
+            transition: all 0.25s; margin-bottom: 16px;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--accent);
+            background: rgba(124,58,237,0.06);
+        }
+        .drop-zone .dz-icon { font-size: 2.5rem; margin-bottom: 10px; }
+        .drop-zone p { color: var(--muted); font-size: 0.9rem; }
+        .drop-zone strong { color: var(--accent); }
+        #dropZoneInput { display: none; }
+        .preview-img {
+            width: 100%; max-width: 320px; height: auto; object-fit: contain;
+            border-radius: 10px; border: 2px solid var(--accent); margin: 0 auto 10px auto;
+        }
+        .form-row { display: flex; gap: 12px; align-items: flex-end; }
+        .form-row .input-group { flex: 1; margin-bottom: 0; }
+        .form-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; display: block; }
+
+        /* ── BUTTONS ── */
+        .btn {
+            padding: 12px 22px; border-radius: 10px; font-family: 'Outfit', sans-serif;
+            font-weight: 600; font-size: 0.9rem; cursor: pointer;
+            border: none; transition: all 0.2s; display: inline-flex;
+            align-items: center; gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: white; box-shadow: 0 4px 20px rgba(124,58,237,0.35);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(124,58,237,0.5); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-outline {
+            background: transparent; color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--accent); color: var(--accent); }
+        .btn-danger {
+            background: rgba(239,68,68,0.15); color: var(--red);
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+        .btn-danger:hover { background: rgba(239,68,68,0.3); }
+        .btn-sm { padding: 8px 14px; font-size: 0.8rem; border-radius: 8px; }
+        .btn-green {
+            background: rgba(16,185,129,0.15); color: var(--green);
+            border: 1px solid rgba(16,185,129,0.3);
+        }
+        .btn-green:hover { background: rgba(16,185,129,0.3); }
+        .btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+        /* ── FACES GRID ── */
+        .faces-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px; margin-top: 16px;
+        }
+        .face-card {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            border-radius: 14px; overflow: hidden;
+            transition: all 0.25s; position: relative;
+        }
+        .face-card:hover { border-color: rgba(124,58,237,0.4); transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .face-card img {
+            width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+        }
+        .face-card-info { padding: 12px; }
+        .face-card-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; }
+        .face-card-meta { font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; }
+        .face-card-actions { display: flex; gap: 6px; }
+        .face-badge {
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(16,185,129,0.85); color: white;
+            font-size: 0.65rem; font-weight: 700; padding: 3px 8px;
+            border-radius: 20px; backdrop-filter: blur(4px);
+        }
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--muted);
+        }
+        .empty-state .e-icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.5; }
+        .empty-state p { font-size: 0.9rem; }
+
+        /* ── SETTINGS ── */
+        .setting-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 0; border-bottom: 1px solid var(--border);
+        }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-info h4 { font-weight: 600; font-size: 0.95rem; }
+        .setting-info p { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
+        .toggle {
+            width: 48px; height: 26px; border-radius: 13px;
+            background: rgba(255,255,255,0.1); cursor: pointer;
+            position: relative; transition: background 0.3s; border: none; flex-shrink: 0;
+        }
+        .toggle.on { background: var(--accent); }
+        .toggle::after {
+            content: ''; width: 20px; height: 20px; background: white;
+            border-radius: 50%; position: absolute; top: 3px; left: 3px;
+            transition: transform 0.3s; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .toggle.on::after { transform: translateX(22px); }
+        .range-input { width: 150px; accent-color: var(--accent); }
+        .range-val {
+            background: rgba(124,58,237,0.2); color: var(--accent);
+            padding: 4px 10px; border-radius: 8px; font-size: 0.85rem;
+            font-weight: 600; min-width: 50px; text-align: center;
+        }
+
+        /* ── TOAST ── */
+        #toast {
+            position: fixed; bottom: 28px; right: 28px;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 14px 20px;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            transform: translateY(80px); opacity: 0;
+            transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+            z-index: 999; font-size: 0.9rem; font-weight: 500;
+        }
+        #toast.show { transform: translateY(0); opacity: 1; }
+        #toast.success { border-color: rgba(16,185,129,0.4); }
+        #toast.error   { border-color: rgba(239,68,68,0.4); }
+
+        /* ── LOADER ── */
+        .spinner {
+            width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.2);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 0.7s linear infinite; display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; padding: 20px 10px; }
+            .logo-text, .nav-item span, .nav-label, .sidebar-footer .logout-btn span { display: none; }
+            .main { margin-left: 60px; padding: 20px; }
+            .stats-row { grid-template-columns: 1fr; }
+            .form-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Particles -->
+<div class="particles" id="particles"></div>
+
+<!-- ════════ LOGIN ════════ -->
+<div id="loginScreen">
+    <div class="login-box">
+        <div class="login-icon">🛡️</div>
+        <h1>FaceGuard</h1>
+        <p>Admin paneliga kirish uchun parolni kiriting</p>
+        <div class="input-group">
+            <input type="password" id="adminPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter') adminLogin()">
+        </div>
+        <p id="loginError">❌ Noto'g'ri parol. Qayta urinib ko'ring.</p>
+        <button class="btn btn-primary" id="loginBtn" onclick="adminLogin()" style="width:100%; justify-content:center; padding:14px;">
+            Kirish
+        </button>
+    </div>
+</div>
+
+<!-- ════════ DASHBOARD ════════ -->
+<div id="dashboardScreen">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">🛡️</div>
+            <div class="logo-text">Face<span>Guard</span></div>
+        </div>
+
+        <div class="nav-label">Asosiy</div>
+        <div class="nav-item active" onclick="showPage('facesPage', this)">
+            <span class="icon">👥</span><span>Yuzlar Bazasi</span>
+        </div>
+        <div class="nav-item" onclick="showPage('uploadPage', this)">
+            <span class="icon">➕</span><span>Yuz Qo'shish</span>
+        </div>
+
+        <div class="nav-label" style="margin-top:20px;">Tizim</div>
+        <div class="nav-item" onclick="showPage('settingsPage', this)">
+            <span class="icon">⚙️</span><span>Sozlamalar</span>
+        </div>
+        <div class="nav-item" onclick="window.location='/'">
+            <span class="icon">📷</span><span>Kamera</span>
+        </div>
+
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="adminLogout()">
+                <span>🚪</span><span>Chiqish</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+
+        <!-- ── FACES PAGE ── -->
+        <div class="page active" id="facesPage">
+            <div class="topbar">
+                <div>
+                    <h2>Yuzlar Bazasi</h2>
+                    <p>Barcha ro'yxatdan o'tgan shaxslar</p>
+                </div>
+                <span class="badge" id="faceCountBadge">0 ta yuz</span>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon purple">👥</div>
+                    <div>
+                        <div class="stat-num" id="statTotal">0</div>
+                        <div class="stat-lbl">Jami yuzlar</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">✅</div>
+                    <div>
+                        <div class="stat-num" id="statTrained">—</div>
+                        <div class="stat-lbl">Model holati</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon yellow">🔄</div>
+                    <div>
+                        <div class="stat-num" id="statLastTrain">—</div>
+                        <div class="stat-lbl">So'nggi yangilash</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title">
+                    👤 Ro'yxatdan O'tgan Shaxslar
+                    <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="retrainModel()">🔄 Modelni Yangilash</button>
+                    <button class="btn btn-primary btn-sm" onclick="showPage('uploadPage', null)">➕ Yangi Qo'shish</button>
+                </div>
+                <div class="faces-grid" id="facesGrid">
+                    <div class="empty-state" style="grid-column:1/-1;">
+                        <div class="e-icon">👁️</div>
+                        <p>Yuklanmoqda...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── UPLOAD PAGE ── -->
+        <div class="page" id="uploadPage">
+            <div class="topbar">
+                <div>
+                    <h2>Yuz Qo'shish</h2>
+                    <p>Bazaga yangi shaxs qo'shing</p>
+                </div>
+            </div>
+
+            <div class="section-card" style="max-width: 540px;">
+                <div class="section-title">📸 Yangi Shaxs</div>
+
+                <div class="drop-zone" id="dropZone" onclick="handleDropZoneClick(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                    <div id="dropZoneContent">
+                        <div class="dz-icon">📁</div>
+                        <p><strong>Rasmni bu yerga tashlang</strong><br>yoki bosib tanlang</p>
+                        <p style="margin-top:8px; font-size:0.8rem;">PNG, JPG, JPEG — max 5MB</p>
+                    </div>
+                    <video id="adminVideo" autoplay playsinline style="display:none; width: 100%; max-width: 320px; border-radius: 10px; margin: 0 auto 10px auto;"></video>
+                    <img id="previewImg" class="preview-img" style="display:none;">
+                </div>
+                <input type="file" id="dropZoneInput" accept="image/*" onchange="handleFileSelect(event)">
+
+                <div style="display:flex; gap:10px; margin-bottom: 16px;">
+                    <button class="btn btn-outline" id="cameraBtn" onclick="toggleAdminCamera()" style="flex:1;justify-content:center;">
+                        📷 Kamerani yoqish
+                    </button>
+                    <button class="btn btn-green" id="captureBtn" onclick="captureAdminPhoto()" style="flex:1;justify-content:center; display:none;">
+                        📸 Rasmga olish
+                    </button>
+                </div>
+
+                <div class="input-group">
+                    <label class="form-label">Shaxs ismi *</label>
+                    <input type="text" id="newFaceName" placeholder="Masalan: Alisher Umarov" style="width:100%;padding:13px 16px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;color:white;font-family:'Outfit',sans-serif;font-size:0.95rem;">
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:6px;">
+                    <button class="btn btn-primary" id="uploadBtn" onclick="uploadFace()" style="flex:1;justify-content:center;">
+                        💾 Saqlash
+                    </button>
+                    <button class="btn btn-outline" onclick="resetUploadForm()">
+                        ✕ Tozalash
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── SETTINGS PAGE ── -->
+        <div class="page" id="settingsPage">
+            <div class="topbar">
+                <div>
+                    <h2>Sozlamalar</h2>
+                    <p>Tizim parametrlarini boshqaring</p>
+                </div>
+            </div>
+
+            <div class="section-card" style="max-width:640px;">
+                <div class="section-title">🔔 Bildirishnoma</div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Telegram Bildirishnoma</h4>
+                        <p>Yuz aniqlanganda Telegram botga xabar yuborilsin</p>
+                    </div>
+                    <button class="toggle on" id="tgToggle" onclick="this.classList.toggle('on')"></button>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Bildirishnoma Oralig'i</h4>
+                        <p>Bir xil odamdan qayta xabar yuborish oralig'i (daqiqa)</p>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <input type="range" class="range-input" min="1" max="60" value="5" id="cooldownRange"
+                               oninput="document.getElementById('cooldownVal').textContent=this.value+' daq'">
+                        <span class="range-val" id="cooldownVal">5 daq</span>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Aniqlik Chegarasi</h4>
+                        <p>Past = qattiqroq (kamroq xato). Tavsiya: 60–80</p>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <input type="range" class="range-input" min="30" max="120" value="70" id="confidenceRange"
+                               oninput="document.getElementById('confidenceVal').textContent=this.value">
+                        <span class="range-val" id="confidenceVal">70</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card" style="max-width:640px;">
+                <div class="section-title">🧠 Model</div>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Modelni Qayta O'rgatish</h4>
+                        <p>Bazaga yangi rasm qo'shilganda avtomatik yangilanadi</p>
+                    </div>
+                    <button class="btn btn-green btn-sm" onclick="retrainModel()">🔄 Hozir Yangilash</button>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Bazani Tozalash</h4>
+                        <p>Barcha yuzlarni o'chirish (qaytarib bo'lmaydi!)</p>
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="confirmClearAll()">🗑️ Hammasini O'chirish</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Toast -->
+<div id="toast">
+    <span id="toastIcon">✅</span>
+    <span id="toastMsg">Muvaffaqiyatli!</span>
+</div>
+
+<script>
+// ════════ PARTICLES ════════
+(function() {
+    const container = document.getElementById('particles');
+    const colors = ['#7c3aed','#4f46e5','#10b981','#f59e0b'];
+    for (let i = 0; i < 18; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 6 + 3;
+        p.style.cssText = `
+            width:${size}px; height:${size}px;
+            left:${Math.random()*100}%;
+            background:${colors[Math.floor(Math.random()*colors.length)]};
+            animation-duration:${Math.random()*15+10}s;
+            animation-delay:${Math.random()*10}s;
+        `;
+        container.appendChild(p);
+    }
+})();
+
+// ════════ LOGIN ════════
+async function adminLogin() {
+    const btn = document.getElementById('loginBtn');
+    const pw = document.getElementById('adminPassword').value;
+    btn.innerHTML = '<span class="spinner"></span> Tekshirilmoqda...';
+    btn.disabled = true;
+    try {
+        const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({password: pw})
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboardScreen').style.display = 'block';
+            loadFaces();
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+            document.getElementById('adminPassword').style.borderColor = 'var(--red)';
+            btn.innerHTML = 'Kirish';
+            btn.disabled = false;
+        }
+    } catch(e) {
+        showToast('Server bilan ulanishda xatolik', 'error');
+        btn.innerHTML = 'Kirish';
+        btn.disabled = false;
+    }
+}
+
+async function adminLogout() {
+    await fetch('/api/admin/logout', {method:'POST'});
+    document.getElementById('dashboardScreen').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminPassword').value = '';
+}
+
+// ════════ NAVIGATION ════════
+function showPage(pageId, navEl) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    if (navEl) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        navEl.classList.add('active');
+    }
+    if (pageId === 'facesPage') loadFaces();
+}
+
+// ════════ FACES ════════
+async function loadFaces() {
+    const grid = document.getElementById('facesGrid');
+    try {
+        const res = await fetch('/api/admin/faces');
+        if (!res.ok) return;
+        const data = await res.json();
+        const faces = data.faces || [];
+
+        // Update stats
+        document.getElementById('statTotal').textContent = faces.length;
+        document.getElementById('statTrained').textContent = faces.length > 0 ? '✅ Tayyor' : '⚠️ Bo\'sh';
+        document.getElementById('faceCountBadge').textContent = faces.length + ' ta yuz';
+        document.getElementById('statLastTrain').textContent = new Date().toLocaleTimeString('uz-UZ');
+
+        if (faces.length === 0) {
+            grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+                <div class="e-icon">👤</div>
+                <p>Bazada hech qanday yuz yo'q.<br>Yangi shaxs qo'shing!</p>
+            </div>`;
+            return;
+        }
+
+        grid.innerHTML = faces.map((f, i) => `
+            <div class="face-card" id="card-${f.filename.replace(/\./g,'_')}">
+                <div class="face-badge">✓ Faol</div>
+                <img src="${f.url}" alt="${f.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'160\\' height=\\'160\\'><rect fill=\\'%231a1a26\\'/><text x=\\'50%\\' y=\\'50%\\' font-size=\\'40\\' text-anchor=\\'middle\\' dominant-baseline=\\'middle\\'>👤</text></svg>'">
+                <div class="face-card-info">
+                    <div class="face-card-name">${f.name}</div>
+                    <div class="face-card-meta">${f.filename}</div>
+                    <div class="face-card-actions">
+                        <button class="btn btn-danger btn-sm" onclick="deleteFace('${f.filename}')">🗑️</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch(e) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><p>❌ Yuklashda xatolik</p></div>`;
+    }
+}
+
+async function deleteFace(filename) {
+    if (!confirm(`"${filename}" ni o'chirishni xohlaysizmi?`)) return;
+    const card = document.getElementById('card-' + filename.replace(/\./g,'_'));
+    if (card) { card.style.opacity = '0.4'; card.style.pointerEvents = 'none'; }
+    try {
+        const res = await fetch(`/api/admin/faces/${filename}`, {method:'DELETE'});
+        const data = await res.json();
+        if (data.success) {
+            showToast('Muvaffaqiyatli o\'chirildi ✓', 'success');
+            loadFaces();
+        } else {
+            showToast('O\'chirishda xatolik', 'error');
+            if (card) { card.style.opacity = '1'; card.style.pointerEvents = 'auto'; }
+        }
+    } catch(e) {
+        showToast('Server xatosi', 'error');
+    }
+}
+
+async function confirmClearAll() {
+    if (!confirm('⚠️ DIQQAT! Barcha yuzlar o\'chiriladi. Davom etasizmi?')) return;
+    showToast('Hozircha bu funksiya ishlamaydi', 'error');
+}
+
+// ════════ UPLOAD ════════
+let selectedFile = null;
+
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) setPreview(file);
+}
+function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.add('dragover');
+}
+function handleDragLeave(e) {
+    document.getElementById('dropZone').classList.remove('dragover');
+}
+function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) setPreview(file);
+}
+function handleDropZoneClick(e) {
+    const video = document.getElementById('adminVideo');
+    if (video && video.style.display === 'block') return;
+    document.getElementById('dropZoneInput').click();
+}
+
+function setPreview(file) {
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = document.getElementById('previewImg');
+        img.src = e.target.result;
+        img.style.display = 'block';
+        const video = document.getElementById('adminVideo');
+        if (video) video.style.display = 'none';
+        document.getElementById('dropZoneContent').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+function resetUploadForm() {
+    selectedFile = null;
+    document.getElementById('newFaceName').value = '';
+    document.getElementById('dropZoneInput').value = '';
+    document.getElementById('previewImg').style.display = 'none';
+    document.getElementById('dropZoneContent').style.display = 'block';
+    stopAdminCamera();
+}
+
+let adminStream = null;
+async function toggleAdminCamera() {
+    const video = document.getElementById('adminVideo');
+    const camBtn = document.getElementById('cameraBtn');
+    const capBtn = document.getElementById('captureBtn');
+    const dzContent = document.getElementById('dropZoneContent');
+    const imgPreview = document.getElementById('previewImg');
+
+    if (adminStream) {
+        stopAdminCamera();
+        return;
+    }
+
+    try {
+        adminStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = adminStream;
+        video.style.display = 'block';
+        dzContent.style.display = 'none';
+        imgPreview.style.display = 'none';
+        
+        camBtn.innerHTML = '🛑 Kamerani o\'chirish';
+        camBtn.classList.add('btn-danger');
+        camBtn.classList.remove('btn-outline');
+        capBtn.style.display = 'inline-flex';
+        selectedFile = null;
+    } catch (e) {
+        showToast('Kameraga kirish imkonsiz', 'error');
+    }
+}
+
+function stopAdminCamera() {
+    const video = document.getElementById('adminVideo');
+    const camBtn = document.getElementById('cameraBtn');
+    const capBtn = document.getElementById('captureBtn');
+    const dzContent = document.getElementById('dropZoneContent');
+    
+    if (adminStream) {
+        adminStream.getTracks().forEach(t => t.stop());
+        adminStream = null;
+    }
+    if(video) video.style.display = 'none';
+    
+    if(camBtn) {
+        camBtn.innerHTML = '📷 Kamerani yoqish';
+        camBtn.classList.remove('btn-danger');
+        camBtn.classList.add('btn-outline');
+    }
+    if(capBtn) capBtn.style.display = 'none';
+    
+    if (!selectedFile && dzContent) {
+        dzContent.style.display = 'block';
+    }
+}
+
+function captureAdminPhoto() {
+    const video = document.getElementById('adminVideo');
+    if (!video || !video.videoWidth) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    
+    canvas.toBlob(blob => {
+        const file = new File([blob], "camera_capture.jpg", { type: "image/jpeg" });
+        setPreview(file);
+        stopAdminCamera();
+    }, 'image/jpeg', 0.9);
+}
+
+async function uploadFace() {
+    const name = document.getElementById('newFaceName').value.trim();
+    const file = selectedFile || document.getElementById('dropZoneInput').files[0];
+    if (!name) { showToast('Ism kiriting!', 'error'); return; }
+    if (!file) { showToast('Rasm tanlang!', 'error'); return; }
+
+    const btn = document.getElementById('uploadBtn');
+    btn.innerHTML = '<span class="spinner"></span> Saqlanmoqda...';
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('name', name);
+    try {
+        const res = await fetch('/api/admin/faces', {method:'POST', body: formData});
+        const data = await res.json();
+        if (data.success) {
+            showToast('✅ ' + name + ' muvaffaqiyatli saqlandi!', 'success');
+            resetUploadForm();
+            setTimeout(() => showPage('facesPage', document.querySelector('.nav-item')), 1000);
+        } else {
+            showToast(data.error || 'Xatolik yuz berdi', 'error');
+        }
+    } catch(e) {
+        showToast('Server bilan ulanishda xatolik', 'error');
+    }
+    btn.innerHTML = '💾 Saqlash';
+    btn.disabled = false;
+}
+
+// ════════ RETRAIN ════════
+async function retrainModel() {
+    showToast('🔄 Model yangilanmoqda...', 'success');
+    try {
+        const res = await fetch('/api/admin/train', {method:'POST'});
+        const data = await res.json();
+        if (data.success) {
+            showToast('✅ Model muvaffaqiyatli yangilandi!', 'success');
+            document.getElementById('statLastTrain').textContent = new Date().toLocaleTimeString('uz-UZ');
+        }
+    } catch(e) {
+        showToast('Yangilashda xatolik', 'error');
+    }
+}
+
+// ════════ TOAST ════════
+let toastTimer;
+function showToast(msg, type='success') {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    document.getElementById('toastIcon').textContent = type === 'success' ? '✅' : '❌';
+    t.className = 'show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.className = '', 3500);
+}
+</script>
+</body>
+</html>
