@@ -75,7 +75,10 @@
             border-radius: 16px;
             overflow: hidden;
             background: #0a0a0f;
-            aspect-ratio: 16/9; /* Yonbosh (landscape/widescreen) */
+            aspect-ratio: 1/1; /* 1:1 To'rtburchak (kvadrat) */
+            width: 100%;
+            max-width: 480px; /* Juda kattalashib ketmasligi uchun */
+            margin: 0 auto;
             border: 1px solid rgba(124,58,237,0.2);
             box-shadow: 0 0 30px rgba(124,58,237,0.1) inset;
         }
@@ -87,6 +90,7 @@
         #overlayCanvas {
             position: absolute; inset: 0;
             width: 100%; height: 100%;
+            object-fit: cover; /* Bu yuz ramkasi buzilib, kengayib ketmasligi uchun majburiy */
         }
 
         /* Scanning corner decorations */

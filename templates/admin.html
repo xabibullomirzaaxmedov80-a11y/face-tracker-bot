@@ -212,7 +212,7 @@
         .drop-zone strong { color: var(--accent); }
         #dropZoneInput { display: none; }
         .preview-img {
-            width: 100%; max-width: 320px; height: auto; object-fit: contain;
+            width: 100%; max-width: 320px; aspect-ratio: 1/1; object-fit: cover;
             border-radius: 10px; border: 2px solid var(--accent); margin: 0 auto 10px auto;
         }
         .form-row { display: flex; gap: 12px; align-items: flex-end; }
@@ -479,7 +479,7 @@
                         <p><strong>Rasmni bu yerga tashlang</strong><br>yoki bosib tanlang</p>
                         <p style="margin-top:8px; font-size:0.8rem;">PNG, JPG, JPEG — max 5MB</p>
                     </div>
-                    <video id="adminVideo" autoplay playsinline style="display:none; width: 100%; max-width: 320px; border-radius: 10px; margin: 0 auto 10px auto;"></video>
+                    <video id="adminVideo" autoplay playsinline style="display:none; width: 100%; max-width: 320px; aspect-ratio: 1/1; object-fit: cover; transform: scaleX(-1); border-radius: 10px; margin: 0 auto 10px auto;"></video>
                     <img id="previewImg" class="preview-img" style="display:none;">
                 </div>
                 <input type="file" id="dropZoneInput" accept="image/*" onchange="handleFileSelect(event)">
