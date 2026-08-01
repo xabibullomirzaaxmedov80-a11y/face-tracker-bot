@@ -1,5 +1,8 @@
 {
   "admin": {
     "password_hash": "xxx"
+  },
+  "test_bot_agent": {
+    "password_hash": "scrypt:32768:8:1$FQhCQaFYmxauyGFq$5a6c93f9c5524ad9d95b9376e45192b27896ac64e96dbdd59ccd58e91b6fc20afd969a1cf403b9aabd92b41bed7f05fcb6b3bd0b8fe30cec693dc6057d9f110a"
   }
 }
