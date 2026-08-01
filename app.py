@@ -264,7 +264,8 @@ def admin_upload_face():
     
     faces_list = git_db.get_faces(username)
     faces_list.append(new_face)
-    git_db.save_faces(username, faces_list)
+    if not git_db.save_faces(username, faces_list):
+        return jsonify({"error": "GitHub tarmog'iga ulanishda xatolik! Qayta urinib ko'ring."}), 500
     
     load_user_faces(username)
     return jsonify({"success": True, "message": "Yuz muvaffaqiyatli saqlandi!"})
@@ -276,7 +277,8 @@ def admin_delete_face(face_id):
     
     faces_list = git_db.get_faces(username)
     faces_list = [f for f in faces_list if f["id"] != face_id]
-    git_db.save_faces(username, faces_list)
+    if not git_db.save_faces(username, faces_list):
+        return jsonify({"error": "O'chirishda tarmoq xatosi."}), 500
     
     load_user_faces(username)
     return jsonify({"success": True})

@@ -11,11 +11,13 @@ BRANCH = "data"
 
 headers = {
     "Authorization": f"token {GITHUB_TOKEN}",
-    "Accept": "application/vnd.github.v3+json"
+    "Accept": "application/vnd.github.v3+json",
+    "Cache-Control": "no-cache"
 }
 
 def get_file_content(path):
-    url = f"https://api.github.com/repos/{REPO}/contents/{path}?ref={BRANCH}"
+    import time
+    url = f"https://api.github.com/repos/{REPO}/contents/{path}?ref={BRANCH}&t={time.time()}"
     r = requests.get(url, headers=headers)
     if r.status_code == 200:
         data = r.json()
