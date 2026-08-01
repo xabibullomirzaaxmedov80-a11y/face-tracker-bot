@@ -568,8 +568,9 @@
 
 <script>
 // ════════ PARTICLES ════════
-(function() {
+function initParticles() {
     const container = document.getElementById('particles');
+    if (!container) return;
     const colors = ['#7c3aed','#4f46e5','#10b981','#f59e0b'];
     for (let i = 0; i < 18; i++) {
         const p = document.createElement('div');
