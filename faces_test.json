@@ -1,0 +1,10 @@
+[
+  {
+    "id": "1",
+    "name": "Test",
+    "image_b64": "",
+    "embedding": [
+      1.0
+    ]
+  }
+]
