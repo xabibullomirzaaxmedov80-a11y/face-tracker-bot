@@ -187,14 +187,19 @@ def analyze_frame():
         norms.append(sim)
         face_boxes.append({"x": x, "y": y, "w": w, "h": h, "name": name})
 
-        if name != "Unknown":
-            cur = time.time()
-            if cur - last_notification_times.get(name, 0) > 300:
-                pad = 20
-                crop = frame[max(0,y-pad):y+h+pad, max(0,x-pad):x+w+pad].copy()
+        # Telegramga xabar yuborish (Tanish va Noma'lum yuzlar uchun)
+        display_name = name if name != "Unknown" else "Begona shaxs!"
+        cur = time.time()
+        
+        # Har 30 soniyada bir marta rasm yuborish (bir xil odam uchun)
+        if cur - last_notification_times.get(display_name, 0) > 30:
+            pad = 20
+            crop = frame[max(0,y-pad):y+h+pad, max(0,x-pad):x+w+pad].copy()
+            if crop.size > 0:
                 _, buf = cv2.imencode('.jpg', crop)
-                send_telegram_photo(f"Tanildi: {name} (o'xshashlik: {sim:.0%})", buf.tobytes())
-                last_notification_times[name] = cur
+                caption = f"Tanildi: {name} (o'xshashlik: {sim:.0%})" if name != "Unknown" else "⚠️ DIQQAT! BEGONA SHAXS ANIQLANDI!"
+                send_telegram_photo(caption, buf.tobytes())
+                last_notification_times[display_name] = cur
 
     return jsonify({
         "recognized_faces": recognized_names,
