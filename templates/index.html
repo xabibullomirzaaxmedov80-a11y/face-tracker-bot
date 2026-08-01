@@ -75,7 +75,7 @@
             border-radius: 16px;
             overflow: hidden;
             background: #0a0a0f;
-            aspect-ratio: 4/3;
+            aspect-ratio: 16/9; /* Yonbosh (landscape/widescreen) */
             border: 1px solid rgba(124,58,237,0.2);
             box-shadow: 0 0 30px rgba(124,58,237,0.1) inset;
         }
@@ -89,10 +89,9 @@
             width: 100%; height: 100%;
         }
 
-        /* Scanning corner decorations (static CSS) */
+        /* Scanning corner decorations */
         .video-wrapper::before, .video-wrapper::after {
-            content: '';
-            position: absolute;
+            content: ''; position: absolute;
             width: 20px; height: 20px;
             border-color: rgba(124,58,237,0.5);
             border-style: solid;
@@ -101,15 +100,14 @@
         .video-wrapper::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
         .video-wrapper::after  { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
 
-        /* Status bar */
+        /* Status bar (Yuzni to'smasligi uchun videodan tashqariga chiqarildi) */
         .status-bar {
-            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 8px;
-            background: rgba(10,10,15,0.75); backdrop-filter: blur(8px);
-            padding: 6px 14px; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: rgba(10,10,15,0.75);
+            padding: 10px 14px; border-radius: 16px;
             border: 1px solid rgba(255,255,255,0.08);
-            font-size: 0.8rem; font-weight: 500; z-index: 10;
-            white-space: nowrap;
+            font-size: 0.9rem; font-weight: 500;
+            margin-bottom: 12px;
         }
         .dot {
             width: 8px; height: 8px; border-radius: 50%;
@@ -133,24 +131,25 @@
             gap: 10px; color: #374151;
         }
         .no-cam .icon { font-size: 3rem; opacity: 0.4; }
-        .no-cam p { font-size: 0.9rem; }
+        .no-cam p { font-size: 0.9rem; text-align: center; padding: 0 10px; }
 
         /* ── RESULT PILL ── */
         .result-pill {
-            position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 10px;
-            background: rgba(10,10,15,0.85); backdrop-filter: blur(10px);
-            padding: 10px 20px; border-radius: 30px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            background: rgba(10,10,15,0.85);
+            padding: 12px 20px; border-radius: 16px;
             border: 1px solid rgba(255,255,255,0.1);
-            z-index: 10; min-width: 200px; justify-content: center;
+            margin-top: 12px;
+            min-height: 60px; /* Joy sakramasi uchun */
+            transition: opacity 0.3s;
         }
-        .result-pill.hidden { display: none; }
+        .result-pill.hidden { opacity: 0; pointer-events: none; }
         #cameraPersonName {
-            font-weight: 700; font-size: 1rem;
+            font-weight: 700; font-size: 1.1rem;
             background: linear-gradient(135deg, #7c3aed, #10b981);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        #vectorNormText { font-size: 0.75rem; color: #64748b; }
+        #vectorNormText { font-size: 0.8rem; color: #64748b; }
 
         /* ── CONTROLS ── */
         .controls {
@@ -243,6 +242,12 @@
     </div>
 
     <div class="card">
+        <!-- Status bar -->
+        <div class="status-bar">
+            <span class="dot" id="statusDot"></span>
+            <span id="statusText">Kutilmoqda...</span>
+        </div>
+
         <div class="video-wrapper">
             <!-- No camera placeholder -->
             <div class="no-cam" id="noCamPlaceholder">
@@ -252,20 +257,14 @@
 
             <video id="videoElement" autoplay playsinline muted></video>
             <canvas id="overlayCanvas"></canvas>
+        </div>
 
-            <!-- Status bar -->
-            <div class="status-bar">
-                <span class="dot" id="statusDot"></span>
-                <span id="statusText">Kutilmoqda...</span>
-            </div>
-
-            <!-- Result pill -->
-            <div class="result-pill hidden" id="cameraResult">
-                <span>👤</span>
-                <div>
-                    <div id="cameraPersonName">—</div>
-                    <div id="vectorNormText"></div>
-                </div>
+        <!-- Result pill -->
+        <div class="result-pill hidden" id="cameraResult">
+            <span>👤</span>
+            <div>
+                <div id="cameraPersonName">—</div>
+                <div id="vectorNormText"></div>
             </div>
         </div>
 
