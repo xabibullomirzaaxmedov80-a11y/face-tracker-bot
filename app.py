@@ -229,46 +229,58 @@ def admin_get_faces():
 
 @app.route("/api/admin/faces", methods=["POST"])
 def admin_upload_face():
-    username = session.get("username")
-    if not username: return jsonify({"error": "Unauthorized"}), 401
-    
-    file = request.files.get('file')
-    name = request.form.get('name', '').strip()
-    if not name or not file:
-        return jsonify({"error": "Ma'lumotlar to'liq emas"}), 400
+    try:
+        username = session.get("username")
+        if not username: return jsonify({"error": "Unauthorized"}), 401
         
-    nparr = np.frombuffer(file.read(), np.uint8)
-    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
-    faces = detect_faces(img)
-    if len(faces) == 0:
-        return jsonify({"error": "Rasmda yuz topilmadi!"}), 400
+        file = request.files.get('file')
+        name = request.form.get('name', '').strip()
+        if not name or not file:
+            return jsonify({"error": "Ma'lumotlar to'liq emas"}), 400
+            
+        file_bytes = file.read()
+        if not file_bytes:
+            return jsonify({"error": "Fayl bo'sh!"}), 400
+            
+        nparr = np.frombuffer(file_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is None:
+            return jsonify({"error": "Rasmni o'qib bo'lmadi! Boshqa rasm yuklang."}), 400
         
-    best = max(faces, key=lambda f: f[14])
-    feat = extract_feature(img, best)
-    
-    # Rasmni kichraytirib base64 qilish (UI uchun)
-    h, w = img.shape[:2]
-    scale = min(1.0, 150 / max(w, h))
-    thumb = cv2.resize(img, (int(w*scale), int(h*scale)))
-    _, buf = cv2.imencode('.jpg', thumb, [cv2.IMWRITE_JPEG_QUALITY, 80])
-    b64_img = "data:image/jpeg;base64," + base64.b64encode(buf).decode('utf-8')
-    
-    face_id = str(int(time.time()))
-    new_face = {
-        "id": face_id,
-        "name": name,
-        "image_b64": b64_img,
-        "embedding": feat.tolist()
-    }
-    
-    faces_list = git_db.get_faces(username)
-    faces_list.append(new_face)
-    if not git_db.save_faces(username, faces_list):
-        return jsonify({"error": "GitHub tarmog'iga ulanishda xatolik! Qayta urinib ko'ring."}), 500
-    
-    load_user_faces(username)
-    return jsonify({"success": True, "message": "Yuz muvaffaqiyatli saqlandi!"})
+        faces = detect_faces(img)
+        if len(faces) == 0:
+            return jsonify({"error": "Rasmda yuz topilmadi!"}), 400
+            
+        best = max(faces, key=lambda f: f[14])
+        feat = extract_feature(img, best)
+        
+        h, w = img.shape[:2]
+        scale = min(1.0, 150 / max(w, h))
+        thumb = cv2.resize(img, (int(w*scale), int(h*scale)))
+        _, buf = cv2.imencode('.jpg', thumb, [cv2.IMWRITE_JPEG_QUALITY, 80])
+        b64_img = "data:image/jpeg;base64," + base64.b64encode(buf).decode('utf-8')
+        
+        face_id = str(int(time.time()))
+        new_face = {
+            "id": face_id,
+            "name": name,
+            "image_b64": b64_img,
+            "embedding": feat.tolist()
+        }
+        
+        faces_list = git_db.get_faces(username)
+        if not isinstance(faces_list, list): faces_list = []
+        faces_list.append(new_face)
+        
+        if not git_db.save_faces(username, faces_list):
+            return jsonify({"error": "GitHub tarmog'iga ulanishda xatolik! Qayta urinib ko'ring."}), 500
+        
+        load_user_faces(username)
+        return jsonify({"success": True, "message": "Yuz muvaffaqiyatli saqlandi!"})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Tizim xatosi: {str(e)}"}), 500
 
 @app.route("/api/admin/faces/<face_id>", methods=["DELETE"])
 def admin_delete_face(face_id):
