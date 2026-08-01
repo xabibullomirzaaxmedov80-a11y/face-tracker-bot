@@ -1,11 +1,5 @@
 {
-  "testuser": {
-    "password_hash": "test"
-  },
-  "gulomovoyatillo596@gmail.com": {
-    "password_hash": "scrypt:32768:8:1$6RcWTgHXRlykMsZm$e57084bf267a7021c8802ccc415e8bc33fdb1cdfffd862484a9dc06bf3ed00e20fa8c0637bb214059c056eab1bf71677707d66823443751b01aa496c1a402253"
-  },
-  "gulomof": {
-    "password_hash": "scrypt:32768:8:1$Q0JsQSyzEgZQxrCq$aa80476b4c196fe4105d6ec981a6c86fad39ce61413b193dc8aac9a1e6956ed36d0a3af829acdf311decd5b3339688771a22134fe6828a4176ec5077cd36ef18"
+  "admin": {
+    "password_hash": "xxx"
   }
 }
